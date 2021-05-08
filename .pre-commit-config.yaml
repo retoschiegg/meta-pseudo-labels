@@ -1,0 +1,25 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v2.4.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+  - repo: https://github.com/psf/black
+    rev: 21.5b0
+    hooks:
+      - id: black
+  - repo: https://github.com/myint/docformatter
+    rev: v1.4
+    hooks:
+      - id: docformatter
+  - repo: local
+    hooks:
+      - id: pylint
+        name: pylint
+        description: "pylint"
+        entry: python
+        language: system
+        require_serial: true
+        types: [python]
+        pass_filenames: true
+        args: [-m, pylint, --rcfile, .pylintrc]

@@ -1,0 +1,5 @@
+outs:
+- md5: ea9528f85177b563309331681bbbace1.dir
+  size: 184380149
+  nfiles: 8
+  path: cifar10
