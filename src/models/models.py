@@ -51,4 +51,7 @@ def get_finetune_model(train_config, exported_model_dir):
     loaded_model = tf.keras.models.load_model(exported_model_dir)
     model = get_student_model(train_config, train_config.finetune_dropout_rate)
     model.set_weights(loaded_model.get_weights())
+    for i, layer in enumerate(model.layers):
+        if i < len(model.layers) - 2:
+            layer.trainable = False
     return model

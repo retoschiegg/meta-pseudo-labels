@@ -5,7 +5,6 @@ import logging
 import shutil
 
 import tensorflow as tf
-import tensorflow_addons as tfa
 
 import train_util
 from dataset import (
@@ -95,7 +94,7 @@ def train_finetune(
         total_steps = train_config.finetune_epochs * num_steps
 
         finetune_loss = tf.losses.CategoricalCrossentropy(
-            from_logits=True, reduction=tf.losses.Reduction.NONE,
+            from_logits=True, reduction=tf.losses.Reduction.NONE
         )
         train_loss_metric = tf.keras.metrics.Mean()
         train_acc_metric = tf.keras.metrics.SparseCategoricalAccuracy(name="train_acc")
@@ -136,7 +135,7 @@ def train_finetune(
                         step,
                         train_config.finetune_learning_rate,
                         total_steps,
-                        train_config.finetune_learning_rate_warmup,
+                        0,
                         0,
                     )
                 )
@@ -151,29 +150,38 @@ def train_finetune(
             tf.summary.scalar("finetune-train/acc", data=train_acc, step=step)
             tf.summary.scalar("finetune-train/loss", data=train_loss, step=step)
 
-            for images, label_indices in dist_val_dataset:
-                strategy.run(val_step, args=(images, label_indices))
-
-            val_loss = val_loss_metric.result()
-            val_acc = val_acc_metric.result()
-            val_loss_metric.reset_states()
-            val_acc_metric.reset_states()
-            tf.summary.scalar("finetune-val/loss", data=val_loss, step=step)
-            tf.summary.scalar("finetune-val/acc", data=val_acc, step=step)
-            tf.summary.flush()
-
             LOGGER.info(
-                "Epoch %s: train-loss=%s, train-acc=%s, val-loss=%s, val-acc=%s",
+                "Epoch %s: train-loss=%s, train-acc=%s",
                 epoch + 1,
                 train_loss,
                 train_acc,
-                val_loss,
-                val_acc,
             )
 
-            if val_loss <= best_val_loss:
-                best_val_loss = val_loss
-                tf.keras.models.save_model(finetune_model, finetune_model_file)
+            if (
+                epoch % train_config.eval_every_epoch == 0
+                or epoch == train_config.finetune_epochs - 1
+            ):
+                for images, label_indices in dist_val_dataset:
+                    strategy.run(val_step, args=(images, label_indices))
+
+                val_loss = val_loss_metric.result()
+                val_acc = val_acc_metric.result()
+                val_loss_metric.reset_states()
+                val_acc_metric.reset_states()
+                tf.summary.scalar("finetune-val/loss", data=val_loss, step=step)
+                tf.summary.scalar("finetune-val/acc", data=val_acc, step=step)
+                tf.summary.flush()
+
+                LOGGER.info(
+                    "Epoch %s: val-loss=%s, val-acc=%s",
+                    epoch + 1,
+                    val_loss,
+                    val_acc,
+                )
+
+                if val_loss <= best_val_loss:
+                    best_val_loss = val_loss
+                    tf.keras.models.save_model(finetune_model, finetune_model_file)
 
     return finetune_model_file
 
@@ -252,13 +260,11 @@ def train_mpl(
         student_model = get_student_model(train_config)
         ema_model = get_student_model(train_config)
 
-        teacher_optimizer = tfa.optimizers.SGDW(
-            weight_decay=train_config.mpl_optimizer_weight_decay,
+        teacher_optimizer = tf.keras.optimizers.SGD(
             momentum=train_config.mpl_optimizer_momentum,
             nesterov=train_config.mpl_optimizer_nesterov,
         )
-        student_optimizer = tfa.optimizers.SGDW(
-            weight_decay=train_config.mpl_optimizer_weight_decay,
+        student_optimizer = tf.keras.optimizers.SGD(
             momentum=train_config.mpl_optimizer_momentum,
             nesterov=train_config.mpl_optimizer_nesterov,
         )

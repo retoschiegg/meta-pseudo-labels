@@ -68,7 +68,7 @@ class CIFAR10TrainConfig:
         "SolarizeAdd",
     ]
 
-    mpl_unlabeled_batch_size_multiplier = 8
+    mpl_unlabeled_batch_size_multiplier = 7
     mpl_label_smoothing = 0.15
     uda_label_temperature = 0.7
     uda_threshold = 0.6
@@ -80,7 +80,7 @@ class CIFAR10TrainConfig:
     student_dropout_rate = 0.2
     student_learning_rate = 0.05
     student_learning_rate_warmup = 5000
-    student_learning_rate_numwait = 3000
+    student_learning_rate_numwait = 500
 
     teacher_dropout_rate = 0.2
     teacher_learning_rate = 0.05
@@ -89,17 +89,15 @@ class CIFAR10TrainConfig:
 
     mpl_optimizer_momentum = 0.9
     mpl_optimizer_nesterov = True
-    mpl_optimizer_weight_decay = 5e-4
     mpl_optimizer_grad_bound = 1e9
 
     # --------------------------------
     # student finetuning
     # --------------------------------
-    finetune_learning_rate = 0.0001
+    finetune_learning_rate = 0.00004
     finetune_optimizer_momentum = 0.9
     finetune_optimizer_nesterov = True
-    finetune_learning_rate_warmup = 25
-    finetune_dropout_rate = 0.3
+    finetune_dropout_rate = 0.5
 
 
 def get_train_config(name):

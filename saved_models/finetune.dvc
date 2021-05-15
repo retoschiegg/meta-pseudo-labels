@@ -1,0 +1,5 @@
+outs:
+- md5: 5bb363661a8747c30972a92c684c44ae.dir
+  size: 8292583
+  nfiles: 3
+  path: finetune

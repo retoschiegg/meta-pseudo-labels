@@ -27,7 +27,7 @@ def get_val_ds(train_config, data_dir, batch_size, name):
     datasets = {
         "cifar10": lambda: data_util.get_cifar10_val_ds(data_dir, train_config.image_width, train_config.image_height),
     }
-    preprocess_image = _preprocess_image_fn(name)
+    preprocess_image = _preprocess_image_fn(name, False)
 
     dataset = datasets[name]()
     dataset = dataset.map(lambda img, lbl: (preprocess_image(img), lbl))
@@ -54,13 +54,14 @@ def get_unlabeled_train_ds(train_config, data_dir, batch_size, name):
     return dataset.batch(batch_size).prefetch(tf.data.experimental.AUTOTUNE)
 
 
-def _preprocess_image_fn(name):
+def _preprocess_image_fn(name, with_augment=True):
     """Preprocess for training."""
     cifar_mean = np.array([0.491400, 0.482158, 0.4465309]).reshape([1, 1, 3])
     cifar_stdev = np.array([0.247032, 0.243485, 0.26159]).reshape([1, 1, 3])
 
     def preprocess_cifar10(image):
-        image = _augment_flip_and_jitter(image, replace_value=0.5)
+        if with_augment:
+            image = _augment_flip_and_jitter(image, replace_value=0.5)
         return (image - cifar_mean) / cifar_stdev
 
     datasets = {
