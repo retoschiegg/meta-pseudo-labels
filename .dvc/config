@@ -1,5 +1,3 @@
 ['remote "origin"']
     url = https://dagshub.com/retoschiegg/meta-pseudo-labels-mirror.dvc
     auth = basic
-    user = retoschiegg
-    ask_password = true
